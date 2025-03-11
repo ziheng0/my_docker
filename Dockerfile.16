@@ -1,0 +1,16 @@
+FROM ubuntu:16.04
+RUN apt-get update
+RUN apt-get upgrade --assume-yes
+RUN apt-get install --assume-yes perl  mc re2c g++ g++-multilib wget  sudo  python
+
+ARG user=test
+
+RUN useradd --create-home --no-log-init --shell /bin/bash ${user} \
+    && adduser ${user} sudo \
+    && echo "${user}:1" | chpasswd
+
+RUN apt-get install --assume-yes bison gcc make build-essential libc6-dev-i386 libncurses-dev wget coreutils diffstat  chrpath cpio gawk  sed     texi2html texinfo unzip flex bc     libssl-dev liblzo2-dev bash-completion
+
+RUN update-alternatives --install /usr/bin/python  python /usr/bin/python2  2700
+
+USER  ${user}
