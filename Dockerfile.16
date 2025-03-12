@@ -1,3 +1,5 @@
+# This dockerfile is used to compile Quectel EC2x series modules based on Qualcomm MDM9x07 chip
+
 FROM ubuntu:16.04
 RUN apt-get update
 RUN apt-get upgrade --assume-yes
@@ -9,7 +11,7 @@ RUN useradd --create-home --no-log-init --shell /bin/bash ${user} \
     && adduser ${user} sudo \
     && echo "${user}:1" | chpasswd
 
-RUN apt-get install --assume-yes 
+RUN apt-get install --assume-yes \
     bison gcc make build-essential \
     libc6-dev-i386 libncurses-dev wget coreutils diffstat \
     chrpath cpio gawk  sed texi2html texinfo unzip flex bc \
