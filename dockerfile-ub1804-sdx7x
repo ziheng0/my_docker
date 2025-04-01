@@ -1,0 +1,64 @@
+#
+# Dockerfile for SDX7x
+# 
+# Build command:
+# 
+#   docker build -t "altim-ub1804-sdx7x:1.0" --build-arg USER_ID=$(id -u) --build-arg USER_NAME=$(whoami) ./
+#
+# Run command:
+# 
+#   docker run -it --rm -w /home/$(whoami) -v /media/altim/altim-vd2t:/home/$(whoami) --name "altim-sdx7x" altim-ub1804-sdx7x:1.0 /bin/bash
+# 
+
+FROM ubuntu:18.04
+
+# User account setting, can change with docker build parameter
+ARG USER_NAME=altim
+ARG USER_ID=1001
+ARG USER_PASSWD=1105
+
+ARG DEBIAN_FRONTEND="noninteractive"
+
+LABEL version="1.0"
+
+# Configure APT
+RUN echo "debconf debconf/frontend select ${DEBIAN_FRONTEND}" | debconf-set-selections && \
+    echo 'APT::Install-Recommends "false";' | tee /etc/apt/apt.conf.d/99install-recommends && \
+    echo 'APT::Get::Assume-Yes "true";' | tee /etc/apt/apt.conf.d/99assume-yes && \
+    sed -Ei 's|^(DPkg::Pre-Install-Pkgs .*)|#\1|g' /etc/apt/apt.conf.d/70debconf && \
+    debconf-show debconf
+
+RUN apt-get update && \
+    apt-get upgrade && \
+    apt-get install -y sudo
+
+# Local settings
+RUN echo Asia/Shanghai >/etc/timezone; \
+    ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime; \
+    # dash setting
+    echo 'dash dash/sh boolean false' | debconf-set-selections; \
+    DEBIAN_FRONTEND=noninteractive dpkg-reconfigure dash; \
+    # Add users
+    useradd -U -m ${USER_NAME} -s /bin/bash -u ${USER_ID} && \
+    echo "${USER_NAME}:${USER_PASSWD}" | chpasswd && \   
+    usermod -aG sudo ${USER_NAME}
+
+# Install essential pakckages for SDX7x
+RUN apt-get install --assume-yes gcc g++ binutils patch bzip2 flex make gettext \
+    pkg-config unzip zlib1g-dev libc6-dev subversion libncurses5-dev \
+    gawk sharutils curl libxml-parser-perl python-yaml ocaml-nox \
+    ocaml ocaml-findlib libssl1.0-dev libfdt-dev coccinelle pkg-config \
+    ocaml-nox ocaml-findlib libpycaml-ocaml-dev libmenhir-ocaml-dev \
+    libpcre-ocaml-dev gcc-multilib g++-multilib uuid uuid-dev net-tools \
+    build-essential chrpath coreutils cvs desktop-file-utils diffstat \
+    docbook-utils fakeroot git help2man libmpfr-dev libreadline-dev libtool \
+    libxml2-dev python-pip python-pysqlite2 quilt sed texi2html texinfo wget \
+    vim bison tree rsync openjdk-8-jdk java-wrappers
+# End for sdx7x
+
+USER ${USER_NAME}
+
+ENV LANG C.UTF-8
+ENV LC_ALL C
+
+CMD /bin/bash
